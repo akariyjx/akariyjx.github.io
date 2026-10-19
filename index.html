@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日语学习资源导航</title>
+<meta name="description" content="EJU / JLPT 日语学习资源导航主页">
+<style>
+  :root {
+    --teal: #4fd8d0;
+    --teal-dim: rgba(79, 216, 208, 0.55);
+    --ink: #0a1018;
+    --glass: rgba(10, 20, 30, 0.55);
+    --glass-border: rgba(140, 220, 225, 0.22);
+    --text: #e8f4f4;
+    --text-dim: rgba(215, 235, 238, 0.65);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans JP", sans-serif;
+    background: var(--ink);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ---------- 背景轮播 ---------- */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transform: scale(1.06);
+    transition: opacity 3s ease-in-out, transform 12s linear;
+    z-index: 0;
+  }
+  .bg-layer.active { opacity: 1; transform: scale(1); }
+
+  .bg-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background:
+      radial-gradient(ellipse at 20% 110%, rgba(10, 40, 55, 0.55) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(5, 10, 18, 0.45) 0%, rgba(5, 10, 18, 0.28) 40%, rgba(4, 8, 14, 0.76) 100%);
+  }
+
+  /* ---------- 深海粒子 ---------- */
+  .particles { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+  .particle {
+    position: absolute;
+    bottom: -3vh;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(160, 240, 235, 0.9) 0%, rgba(79, 216, 208, 0.25) 60%, transparent 100%);
+    box-shadow: 0 0 8px rgba(120, 230, 225, 0.45);
+    animation: rise linear infinite;
+    opacity: 0;
+  }
+  @keyframes rise {
+    0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+    8%   { opacity: 0.8; }
+    60%  { transform: translate(2.5vw, -55vh) scale(0.9); opacity: 0.55; }
+    100% { transform: translate(-1vw, -108vh) scale(0.7); opacity: 0; }
+  }
+
+  /* ---------- 布局 ---------- */
+  .page {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5vh 24px 4vh;
+  }
+
+  /* ---------- 水母开关 ---------- */
+  .jelly-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.7s cubic-bezier(0.22, 0.9, 0.24, 1);
+  }
+
+  .jelly-trigger {
+    position: relative;
+    width: clamp(104px, 15vw, 150px);
+    height: clamp(104px, 15vw, 150px);
+    border: 0;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 呼吸光晕 */
+  .jelly-trigger::before,
+  .jelly-trigger::after {
+    content: "";
+    position: absolute;
+    inset: 12%;
+    border-radius: 50%;
+    border: 1px solid rgba(79, 216, 208, 0.35);
+    animation: pulse 4.5s ease-out infinite;
+    pointer-events: none;
+  }
+  .jelly-trigger::after { animation-delay: 2.2s; }
+  @keyframes pulse {
+    0%   { transform: scale(0.85); opacity: 0; }
+    35%  { opacity: 0.55; }
+    100% { transform: scale(1.45); opacity: 0; }
+  }
+
+  .jelly-body {
+    width: 100%;
+    height: 100%;
+    color: var(--teal);
+    filter: drop-shadow(0 0 18px rgba(79, 216, 208, 0.45));
+    animation: float 5s ease-in-out infinite;
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-9px) rotate(-2deg); }
+  }
+  .jelly-trigger:hover .jelly-body {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 26px rgba(79, 216, 208, 0.7));
+  }
+  .jelly-trigger:active .jelly-body { transform: scale(0.97); }
+  .jelly-trigger:focus-visible::before {
+    border-color: rgba(79, 216, 208, 0.9);
+    opacity: 1;
+    animation: none;
+    transform: scale(1.02);
+  }
+
+  /* 打开状态：水母缩小上移，让位给卡片 */
+  body.revealed .jelly-wrap { transform: translateY(-4px) scale(0.74); }
+  body.revealed .jelly-trigger::before,
+  body.revealed .jelly-trigger::after { opacity: 0; animation: none; }
+
+  /* ---------- 卡片区（默认收起） ---------- */
+  .cards-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    width: 100%;
+    transition: grid-template-rows 0.7s cubic-bezier(0.22, 0.9, 0.24, 1);
+  }
+  body.revealed .cards-wrap { grid-template-rows: 1fr; }
+
+  .cards {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(16px, 2.6vw, 28px);
+    padding-top: 3vh;
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: clamp(240px, 27vw, 310px);
+    padding: 22px 26px;
+    border-radius: 18px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    text-decoration: none;
+    color: var(--text);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(26px) scale(0.97);
+    filter: blur(4px);
+    transition: opacity 0.5s ease, transform 0.65s cubic-bezier(0.22, 0.9, 0.24, 1),
+                filter 0.5s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  }
+  body.revealed .card { opacity: 1; transform: none; filter: none; }
+  body.revealed .card:nth-child(1) { transition-delay: 0.12s, 0.12s, 0.12s, 0s, 0s; }
+  body.revealed .card:nth-child(2) { transition-delay: 0.22s, 0.22s, 0.22s, 0s, 0s; }
+  body.revealed .card:nth-child(3) { transition-delay: 0.32s, 0.32s, 0.32s, 0s, 0s; }
+  /* 悬停时不受入场延迟影响 */
+  body.revealed .card:hover { transition-delay: 0s, 0s, 0s, 0s, 0s; }
+
+  /* 卡片顶部流光线 */
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 12%;
+    width: 76%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(79, 216, 208, 0.8), transparent);
+    opacity: 0.5;
+    transition: opacity 0.35s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(79, 216, 208, 0.65);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(79, 216, 208, 0.18),
+                inset 0 0 26px rgba(79, 216, 208, 0.05);
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card .icon {
+    width: 42px; height: 42px;
+    flex: none;
+    color: var(--teal);
+    filter: drop-shadow(0 0 8px rgba(79, 216, 208, 0.4));
+  }
+  .card:hover .icon { animation: sway 2.6s ease-in-out infinite; }
+  @keyframes sway {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    25% { transform: rotate(-5deg) translateY(-2px); }
+    75% { transform: rotate(5deg) translateY(-2px); }
+  }
+
+  .card h2 {
+    font-size: 1.06rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+  }
+
+  /* 占位卡片（N3 刷题：留空） */
+  .card.placeholder {
+    pointer-events: none;
+    background: rgba(12, 18, 26, 0.4);
+    border-style: dashed;
+    border-color: rgba(150, 180, 190, 0.2);
+  }
+  .card.placeholder .icon { color: rgba(170, 200, 205, 0.5); filter: none; }
+  .card.placeholder h2 { color: rgba(220, 235, 238, 0.6); }
+
+  /* ---------- 底栏 ---------- */
+  footer {
+    position: absolute;
+    bottom: 4vh;
+    font-size: 0.68rem;
+    letter-spacing: 0.3em;
+    text-indent: 0.3em;
+    color: rgba(200, 220, 225, 0.3);
+  }
+
+  @media (max-height: 700px) {
+    .jelly-trigger { width: 92px; height: 92px; }
+    .card { padding: 16px 22px; }
+    .cards { padding-top: 2vh; }
+  }
+
+  @media (max-width: 720px) {
+    html, body { overflow: auto; }
+    .page { height: auto; min-height: 100%; padding: 12vh 20px 12vh; }
+    .card { width: 100%; max-width: 340px; }
+    footer { position: static; margin-top: 6vh; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 背景轮播层 -->
+  <div class="bg-layer" id="bg0" style="background-image:url('assets/bg3.jpg')"></div>
+  <div class="bg-layer" id="bg1" style="background-image:url('assets/bg1.jpg')"></div>
+  <div class="bg-layer" id="bg2" style="background-image:url('assets/bg2.jpg')"></div>
+  <div class="bg-layer" id="bg3" style="background-image:url('assets/bg4.jpg')"></div>
+  <div class="bg-veil"></div>
+
+  <!-- 深海粒子 -->
+  <div class="particles" id="particles"></div>
+
+  <main class="page">
+    <!-- 水母开关 -->
+    <div class="jelly-wrap">
+      <button class="jelly-trigger" id="jellyBtn" aria-expanded="false" aria-controls="cards" aria-label="展开导航">
+        <svg class="jelly-body" viewBox="0 0 120 150" fill="none">
+          <!-- 伞盖 -->
+          <path d="M22 58 Q26 16 60 16 Q94 16 98 58 Q99 74 78 76 Q88 86 70 84 Q76 96 58 88 Q48 100 42 86 Q24 90 30 76 Q10 72 22 58 Z"
+                fill="rgba(79,216,208,0.16)" stroke="rgba(150,240,235,0.85)" stroke-width="2.2" stroke-linejoin="round"/>
+          <!-- 内部伞体 -->
+          <path d="M34 54 Q38 30 60 30 Q82 30 86 54 Q86 66 74 68 Q70 56 60 56 Q50 56 46 68 Q34 66 34 54 Z"
+                fill="rgba(120,235,230,0.16)"/>
+          <!-- 触手 -->
+          <path d="M38 82 Q32 104 40 124 M50 86 Q44 110 52 132 M62 88 Q60 112 66 136 M74 84 Q80 106 72 128 M84 78 Q92 98 86 114"
+                stroke="rgba(140,235,230,0.55)" stroke-width="2" stroke-linecap="round"/>
+          <!-- 眼 -->
+          <circle cx="50" cy="52" r="3.2" fill="rgba(220,255,252,0.95)"/>
+          <circle cx="70" cy="52" r="3.2" fill="rgba(220,255,252,0.95)"/>
+          <!-- 光点 -->
+          <circle cx="42" cy="38" r="1.8" fill="rgba(200,255,250,0.5)"/>
+          <circle cx="76" cy="34" r="1.4" fill="rgba(200,255,250,0.45)"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 卡片（默认收起） -->
+    <div class="cards-wrap">
+      <section class="cards" id="cards">
+        <!-- ① EJU 听力在线刷题 -->
+        <a class="card" href="https://akariyjx.github.io/ejulearning/" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 20 v8 M12 14 v20 M18 8 v32 M24 16 v16 M30 10 v28 M36 18 v12 M42 21 v6"/>
+          </svg>
+          <h2>EJU 听力在线刷题</h2>
+        </a>
+
+        <!-- ② 听力基础词汇快速反应 -->
+        <a class="card" href="https://akariyjx.github.io/qucikresponse/" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 4 a20 20 0 1 1 -14.1 5.9"/>
+            <path d="M24 14 v10 l7 5"/>
+            <circle cx="8" cy="10" r="3.2" fill="rgba(79,216,208,0.25)"/>
+          </svg>
+          <h2>听力基础词汇快速反应</h2>
+        </a>
+
+        <!-- ③ N3 历年真题快速刷题（占位） -->
+        <div class="card placeholder" aria-disabled="true">
+          <svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8" y="6" width="32" height="36" rx="4"/>
+            <path d="M16 16 h16 M16 24 h16 M16 32 h9"/>
+          </svg>
+          <h2>N3 历年真题快速刷题</h2>
+        </div>
+      </section>
+    </div>
+
+    <footer>EJU / JLPT</footer>
+  </main>
+
+<script>
+  // ---------- 水母开关 ----------
+  const btn = document.getElementById('jellyBtn');
+  const setState = (open) => {
+    document.body.classList.toggle('revealed', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? '收起导航' : '展开导航');
+  };
+  btn.addEventListener('click', () => setState(!document.body.classList.contains('revealed')));
+
+  // 打开时点击空白处收起
+  document.addEventListener('click', (e) => {
+    if (!document.body.classList.contains('revealed')) return;
+    if (e.target.closest('#jellyBtn') || e.target.closest('.card')) return;
+    setState(false);
+  });
+
+  // ---------- 背景轮播 ----------
+  const layers = document.querySelectorAll('.bg-layer');
+  let cur = 0;
+  layers[0].classList.add('active');
+  setInterval(() => {
+    layers[cur].classList.remove('active');
+    cur = (cur + 1) % layers.length;
+    layers[cur].classList.add('active');
+  }, 9000);
+
+  // ---------- 深海粒子 ----------
+  const box = document.getElementById('particles');
+  const COUNT = 26;
+  for (let i = 0; i < COUNT; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 2 + Math.random() * 5;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = (Math.random() * 100) + 'vw';
+    p.style.animationDuration = (14 + Math.random() * 18) + 's';
+    p.style.animationDelay = (-Math.random() * 30) + 's';
+    box.appendChild(p);
+  }
+</script>
+</body>
+</html>
